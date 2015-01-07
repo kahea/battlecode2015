@@ -9,7 +9,7 @@ public class RobotPlayer {
 	static Random rand; 
 
 	public static void run(RobotController rc){
-		rand = new Random(rc.getID()); 
+		rand = new Random(rc.getID()); // each robot will follow its own random path 
 		facing = Direction.values()[(int)(rand.nextDouble()*8)]; // randomize starting direction 
 		while (true){
 			try {
