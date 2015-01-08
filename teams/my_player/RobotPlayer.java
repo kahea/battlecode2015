@@ -1,17 +1,27 @@
 package player1;
+
+import java.util.ArrayList;
+import java.util.Random; 
+
 import battlecode.common.*;
-import java.util.*;
-import java.util.Random; // this should give the same import 
 
 public class RobotPlayer {
 	static Direction facing;
-	static Random rand; 
-	static RobotController rc;
+	static Random rand = new Random();
+	public static RobotController rc;
+	public static Direction all_directions[] = Direction.values();
+
+	static ArrayList<MapLocation> path = new ArrayList<MapLocation>();
+
 
 	public static void run(RobotController myrc){
 		rc = myrc;
-		rand = new Random(myrc.getID()); // each robot will follow its own random path
+		rand.setSeed(rc.getID()); // each robot will follow its own random path
 		facing = getRandomDirection();
+
+
+
+
 		while (true){
 			try {
 				// HQ can spawn units 
@@ -19,21 +29,26 @@ public class RobotPlayer {
 					attackEnemyZero();
 					spawnUnit(RobotType.BEAVER);
 				} else if (rc.getType() == RobotType.BEAVER) { 
-					if (Clock.getRoundNum() < 700){
+					// at first, building miners is more important 
+					if (Clock.getRoundNum() < 700){ 
 						buildStructure(RobotType.MINERFACTORY);
-					} else {
+					} else { // then we build barracks 
 						buildStructure(RobotType.BARRACKS);
 					}
 					mineAndMove();
 
 				} else if (rc.getType() == RobotType.MINER){
 					mineAndMove();
+
 				} else if (rc.getType() == RobotType.MINERFACTORY){
 					spawnUnit(RobotType.MINER);
+
 				} else if (rc.getType() == RobotType.BARRACKS){
 					spawnUnit(RobotType.SOLDIER);
+
 				} else if (rc.getType() == RobotType.TOWER){
 					attackEnemyZero();
+
 				} else if (rc.getType() == RobotType.SOLDIER){
 					attackEnemyZero();
 					moveAround();
