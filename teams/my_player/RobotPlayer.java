@@ -16,20 +16,44 @@ public class RobotPlayer {
 			try {
 				// HQ can spawn units 
 				if (rc.getType() == RobotType.HQ){
+					attackEnemyZero();
 					spawnUnit(RobotType.BEAVER);
 				} else if (rc.getType() == RobotType.BEAVER) { 
-					buildStructure(RobotType.MINERFACTORY);
+					if (Clock.getRoundNum() < 700){
+						buildStructure(RobotType.MINERFACTORY);
+					} else {
+						buildStructure(RobotType.BARRACKS);
+					}
 					mineAndMove();
+
 				} else if (rc.getType() == RobotType.MINER){
 					mineAndMove();
 				} else if (rc.getType() == RobotType.MINERFACTORY){
 					spawnUnit(RobotType.MINER);
+				} else if (rc.getType() == RobotType.BARRACKS){
+					spawnUnit(RobotType.SOLDIER);
+				} else if (rc.getType() == RobotType.TOWER){
+					attackEnemyZero();
+				} else if (rc.getType() == RobotType.SOLDIER){
+					attackEnemyZero();
+					moveAround();
 				}
+
 			} catch (GameActionException e) {
 				e.printStackTrace();
 			}
 			rc.yield();
 		}
+	}
+
+	private static void attackEnemyZero() throws GameActionException {
+		RobotInfo[] nearbyEnemies = rc.senseNearbyRobots(rc.getLocation(), rc.getType().attackRadiusSquared, rc.getTeam().opponent());
+		
+		if (nearbyEnemies.length > 0){
+			if (rc.isWeaponReady() && rc.canAttackLocation(nearbyEnemies[0].location)){
+				rc.attackLocation(nearbyEnemies[0].location);
+			}
+		}	
 	}
 
 	private static void spawnUnit(RobotType type) throws GameActionException {
@@ -39,6 +63,7 @@ public class RobotPlayer {
 	}
 
 	private static void moveAround() throws GameActionException {
+		
 		if (rand.nextDouble() < 0.05){
 			if (rand.nextDouble() < 0.05) {
 				facing = facing.rotateLeft();
@@ -46,12 +71,25 @@ public class RobotPlayer {
 				facing = facing.rotateRight();
 			} 
 		}
+		MapLocation tileInFront = rc.getLocation().add(facing);
 		
-		if (rc.senseTerrainTile(rc.getLocation().add(facing)) != TerrainTile.NORMAL){
-			facing = facing.rotateLeft();
+
+		// check that location in front cannot be attacked by the enemy 
+		MapLocation[] enemyTowers = rc.senseEnemyTowerLocations();
+		boolean tileInFrontSafe = true;
+		for (MapLocation m : enemyTowers){
+			if (m.distanceSquaredTo(tileInFront) <=  RobotType.TOWER.attackRadiusSquared){
+				tileInFrontSafe = false;
+				break; 
+			}
 		}
-		if (rc.isCoreReady() && rc.canMove(facing)){
-			rc.move(facing);
+
+		if (rc.senseTerrainTile(tileInFront) != TerrainTile.NORMAL || !tileInFrontSafe){
+			facing = facing.rotateLeft();
+		} else {
+			if (rc.isCoreReady() && rc.canMove(facing)){
+				rc.move(facing);
+			}
 		}
 	} 
 
